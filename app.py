@@ -10,7 +10,7 @@ app = Flask(__name__)
 model = joblib.load('decision_tree_model.joblib')
 
 # IoT Hub Connection String (replace with your actual value)
-IOTHUB_DEVICE_CONNECTION_STRING = '<Your IoT Hub Device Connection String>'
+IOTHUB_DEVICE_CONNECTION_STRING = 'HostName=homesafetyhub.azure-devices.net;DeviceId=gatewaydevice;SharedAccessKey=8HLMsfUW4hRaJuoIq3HvNTj4USn2rqvof8jF9qaLkBs='
 
 # Create IoT Hub Client
 device_client = IoTHubDeviceClient.create_from_connection_string(IOTHUB_DEVICE_CONNECTION_STRING)
