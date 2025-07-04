@@ -5,6 +5,7 @@ from azure.iot.device import IoTHubDeviceClient, Message
 
 app = Flask(__name__)
 
+
 # Load the model
 model = joblib.load('decision_tree_model.joblib')
 
