@@ -2,18 +2,29 @@ from flask import Flask, request, jsonify
 import joblib
 import json
 from azure.iot.device import IoTHubDeviceClient, Message
+import os
 
 app = Flask(__name__)
 
+# Load the model safely with absolute path and error handling
+model_path = os.path.join(os.path.dirname(__file__), 'decision_tree_model.joblib')
+try:
+    model = joblib.load(model_path)
+    print("Model loaded successfully.")
+except Exception as e:
+    print(f"Failed to load model: {e}")
+    model = None
 
-# Load the model
-model = joblib.load('decision_tree_model.joblib')
-
-# IoT Hub Connection String (replace with your actual value)
+# IoT Hub Connection String (hardcoded as you requested)
 IOTHUB_DEVICE_CONNECTION_STRING = 'HostName=homesafetyhub.azure-devices.net;DeviceId=gatewaydevice;SharedAccessKey=8HLMsfUW4hRaJuoIq3HvNTj4USn2rqvof8jF9qaLkBs='
 
-# Create IoT Hub Client
-device_client = IoTHubDeviceClient.create_from_connection_string(IOTHUB_DEVICE_CONNECTION_STRING)
+def create_iot_client():
+    try:
+        client = IoTHubDeviceClient.create_from_connection_string(IOTHUB_DEVICE_CONNECTION_STRING)
+        return client
+    except Exception as e:
+        print(f"Failed to create IoT Hub client: {e}")
+        return None
 
 @app.route('/gateway', methods=['POST'])
 def gateway():
@@ -28,12 +39,18 @@ def gateway():
             data.get('sensor_smoke', 0)
         ]
 
+        if model is None:
+            return jsonify({'status': 'Error', 'message': 'Model not loaded'}), 500
+
         prediction = model.predict([features])[0]
         data['anomaly_flag'] = bool(prediction)
 
-        # Send to IoT Hub
-        iot_message = Message(json.dumps(data))
-        device_client.send_message(iot_message)
+        device_client = create_iot_client()
+        if device_client:
+            iot_message = Message(json.dumps(data))
+            device_client.send_message(iot_message)
+        else:
+            print("IoT client unavailable, skipping sending message.")
 
         return jsonify({'status': 'Processed and sent to IoT Hub', 'processed_data': data}), 200
 
