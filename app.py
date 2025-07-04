@@ -6,6 +6,23 @@ import os
 
 app = Flask(__name__)
 
+
+#test
+
+print("Current working directory:", os.getcwd())
+
+model_path0 = os.path.join(os.path.dirname(__file__), 'decision_tree_model.joblib')
+print("Expected f model path:", model_path0 )
+
+try:
+    model = joblib.load(model_path0)
+    print("Model loaded f successfully.")
+except Exception as e:
+    print(f"Failed to f load model: {e}")
+    model = None
+#end test
+
+
 # Load the model safely with absolute path and error handling
 model_path = os.path.join(os.path.dirname(__file__), 'decision_tree_model.joblib')
 try:
