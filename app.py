@@ -6,31 +6,20 @@ import os
 
 app = Flask(__name__)
 
-
-#test
-
-print("Current working directory:", os.getcwd())
-
-model_path0 = os.path.join(os.path.dirname(__file__), 'decision_tree_model.joblib')
-print("Expected f model path:", model_path0 )
-
-try:
-    model = joblib.load(model_path0)
-    print("Model loaded f successfully.")
-except Exception as e:
-    print(f"Failed to f load model: {e}")
-    model = None
-#end test
-
-
-# Load the model safely with absolute path and error handling
+# Debug: Get working directory and expected model path
+working_dir = os.getcwd()
 model_path = os.path.join(os.path.dirname(__file__), 'decision_tree_model.joblib')
+
+print("Current working directory:", working_dir)
+print("Expected model path:", model_path)
+
 try:
     model = joblib.load(model_path)
     print("Model loaded successfully.")
 except Exception as e:
     print(f"Failed to load model: {e}")
     model = None
+    model_load_error = str(e)  # Save the error to return in the response
 
 # IoT Hub Connection String (hardcoded as you requested)
 IOTHUB_DEVICE_CONNECTION_STRING = 'HostName=homesafetyhub.azure-devices.net;DeviceId=gatewaydevice;SharedAccessKey=8HLMsfUW4hRaJuoIq3HvNTj4USn2rqvof8jF9qaLkBs='
@@ -57,7 +46,13 @@ def gateway():
         ]
 
         if model is None:
-            return jsonify({'status': 'Error', 'message': 'Model not loaded'}), 500
+            return jsonify({
+                'status': 'Error',
+                'message': 'Model not loaded',
+                'working_directory': working_dir,
+                'expected_model_path': model_path,
+                'model_load_error': model_load_error
+            }), 500
 
         prediction = model.predict([features])[0]
         data['anomaly_flag'] = bool(prediction)
